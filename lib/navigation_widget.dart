@@ -8,10 +8,12 @@ import 'sr_button_component.dart';
 class NavigationWidget extends StatefulWidget {
   final List<String> resultList;
   final Function() onSpeakerButtonPressed;
+  final Function() onWrongWayNoti;
   NavigationWidget({
     super.key,
     required this.resultList,
     required this.onSpeakerButtonPressed,
+    required this.onWrongWayNoti,
   });
 
   @override
@@ -26,6 +28,12 @@ class _NavigationWidgetState extends State<NavigationWidget> {
     setState(() {
       isAnswer = true;
     });
+  }
+
+  Future<void> _speak(String text) async {
+    await flutterTts.setLanguage("ko-KR");
+    await flutterTts.setVoice({"name": "Yuna", "locale": "ko-KR"});
+    await flutterTts.speak(text);
   }
 
   @override

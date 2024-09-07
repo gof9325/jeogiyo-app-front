@@ -32,6 +32,7 @@ class _HomePageWidgetState extends State<HomePageWidget>
   double latitude = 0;
   double longitude = 0;
   bool _showWarning = false;
+  bool _isProcessing = false;
 
   ListeningState listeningState = ListeningState.notListening;
 
@@ -40,32 +41,30 @@ class _HomePageWidgetState extends State<HomePageWidget>
   void _initSpeech() async {
     _speechEnabled = await _speechToText.initialize(
       onStatus: (status) async {
-        if (status == 'done' && listeningState == ListeningState.listening) {
-          print("Done");
-          listeningState = ListeningState.done;
-          if (resultList.isNotEmpty) {
-            final Map<String?, List<String>?> response =
-                await ask(resultList.last, latitude, longitude);
-
-            response.forEach((key, value) {
-              if (key == '' || key == null) {
-                // _showWarning = true;
-              } else {
-                if (value != null) {
-                  resultList.addAll(value);
-                }
-              }
-            });
-          } else {
-            listeningState = ListeningState.notListening;
+        if (!_isProcessing) {
+          if (status == 'done' && listeningState == ListeningState.listening) {
+            print("Done");
+            _isProcessing = true;
+            listeningState = ListeningState.done;
+            await getAnswer();
           }
-
-          setState(() {});
         }
       },
     );
 
-    setState(() {});
+    // setState(() {});
+  }
+
+  Future getAnswer() async {
+    print('get answer');
+    if (_lastWords.isNotEmpty || _lastWords != '') {
+      final response = await ask(_lastWords);
+      final data = response.data;
+      resultList = data['instructions'];
+      _lastWords = '';
+      _isProcessing = false;
+      setState(() {});
+    }
   }
 
   void startListening() async {
@@ -92,7 +91,6 @@ class _HomePageWidgetState extends State<HomePageWidget>
   void _onSpeechResult(SpeechRecognitionResult result) {
     setState(() {
       _lastWords = result.recognizedWords;
-      listeningState = ListeningState.done;
     });
     print('on speech result' + _lastWords);
   }
@@ -205,6 +203,7 @@ class _HomePageWidgetState extends State<HomePageWidget>
                     startListening();
                   },
                   resultList: resultList,
+                  onWrongWayNoti: _showWrongWayNoti,
                 ),
             ],
           ),

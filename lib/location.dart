@@ -30,13 +30,14 @@ Future<bool> _checkAndRequestPermission({bool? background}) async {
   return true;
 }
 
-// Future<void> _getLocation() async {
-//   if (await _checkAndRequestPermission()) {
-//     final Location location = await FlLocation.getLocation();
-//     print('location: ${location.toJson()}');
-//     return {
-//       'latitude': location.latitude,
-//       'longitude': location.longitude,
-//     };
-//   }
-// }
+Future<Map<String, double>?> getLocation() async {
+  if (await _checkAndRequestPermission()) {
+    final Location location = await FlLocation.getLocation();
+    print('location: ${location.toJson()}');
+    return {
+      'latitude': location.latitude,
+      'longitude': location.longitude,
+    };
+  }
+  return null;
+}
