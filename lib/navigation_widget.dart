@@ -43,6 +43,12 @@ class _NavigationWidgetState extends State<NavigationWidget> {
     flutterTts.setSharedInstance(true);
     flutterTts.setLanguage("ko-KR");
     flutterTts.setVoice({"name": "Yuna", "locale": "ko-KR"});
+    if (mounted) {
+      print('initState' + widget.resultList.join(' '));
+      _speak(
+        widget.resultList.join(' '),
+      );
+    }
   }
 
   @override
@@ -147,13 +153,15 @@ class _NavigationWidgetState extends State<NavigationWidget> {
               )
             : Column(
                 mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   for (var i = 0; i < widget.resultList.length; i++)
                     Text(
                       widget.resultList[i],
                       style: const TextStyle(
                         fontSize: 20.0,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                 ],

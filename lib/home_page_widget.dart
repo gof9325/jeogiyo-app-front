@@ -41,12 +41,17 @@ class _HomePageWidgetState extends State<HomePageWidget>
   void _initSpeech() async {
     _speechEnabled = await _speechToText.initialize(
       onStatus: (status) async {
-        if (!_isProcessing) {
-          if (status == 'done' && listeningState == ListeningState.listening) {
-            print("Done");
-            _isProcessing = true;
-            listeningState = ListeningState.done;
-            await getAnswer();
+        print('onStatus: $status');
+        if (status == 'done') {
+          if (!_isProcessing) {
+            if (listeningState == ListeningState.listening) {
+              print("Done");
+              _isProcessing = true;
+              await getAnswer();
+              listeningState = ListeningState.done;
+            }
+          } else {
+            _isProcessing = false;
           }
         }
       },
@@ -57,12 +62,22 @@ class _HomePageWidgetState extends State<HomePageWidget>
 
   Future getAnswer() async {
     print('get answer');
+
     if (_lastWords.isNotEmpty || _lastWords != '') {
       final response = await ask(_lastWords);
+
       final data = response.data;
-      resultList = data['instructions'];
+
+      if (response.type == "TO_DESTINATION" ||
+          response.type == "CONFIRM_DIRECTION") {
+        resultList = (data.values.first as List).cast<String>();
+      } else if (response.type == "REPEAT_LAST_RESPONSE") {}
+
       _lastWords = '';
       _isProcessing = false;
+      setState(() {});
+    } else {
+      listeningState = ListeningState.notListening;
       setState(() {});
     }
   }
@@ -95,10 +110,9 @@ class _HomePageWidgetState extends State<HomePageWidget>
     print('on speech result' + _lastWords);
   }
 
-  void _showWrongWayNoti() {
-    setState(() {
-      _showWarning = true;
-    });
+  Future _checkWrongWay() async {
+    _showWarning = await checkWrongWay(_lastWords);
+    setState(() {});
   }
 
   @override
@@ -203,7 +217,7 @@ class _HomePageWidgetState extends State<HomePageWidget>
                     startListening();
                   },
                   resultList: resultList,
-                  onWrongWayNoti: _showWrongWayNoti,
+                  onWrongWayNoti: _checkWrongWay,
                 ),
             ],
           ),

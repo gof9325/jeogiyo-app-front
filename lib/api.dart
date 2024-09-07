@@ -8,6 +8,7 @@ const endpoint = '/api/ask';
 
 const headers = {
   "Content-Type": "application/x-www-form-urlencoded",
+  // "Content-Type": "application/json",
 };
 
 Future<Response> ask(String spokenText) async {
@@ -27,31 +28,28 @@ Future<Response> ask(String spokenText) async {
 
   print('latitude: $latitude');
 
-  // final body = jsonEncode({
-  //   'spokenText': spokenText,
-  //   'coordinates': {
-  //     "latitude": latitude,
-  //     "longitude": longitude,
-  //   },
-  // });
+  final body = {
+    'spokenText': spokenText,
+    'coordinates': {
+      'latitude': latitude,
+      'longitude': longitude,
+    },
+  };
 
   final response = await http.post(
     Uri.parse(url),
-    body: {
-      'spokenText': spokenText,
-      'coordinates': jsonEncode(
-        {
-          "latitude": latitude,
-          "longitude": longitude,
-        },
-      ),
+    headers: <String, String>{
+      'Content-Type': 'application/json; charset=UTF-8',
     },
-    headers: headers,
+    body: jsonEncode({
+      'spokenText': spokenText,
+      'coordinates': {
+        'latitude': latitude,
+        'longitude': longitude,
+      },
+    }),
   );
 
-  // if (response.statusCode != 200) {
-  //   throw Exception('Failed to load data');
-  // } else {
   final responseData = jsonDecode(response.body);
   final responseType = Response(
     success: responseData['success'],
@@ -60,53 +58,97 @@ Future<Response> ask(String spokenText) async {
   );
 
   if (responseType.type.toString() == "UNKNOWN") {
-    throw Exception('Unknown response type');
+    return Response(
+      success: true,
+      type: 'UNKNOWN',
+      data: null,
+    );
   } else if (responseType.type.toString() == "TO_DESTINATION") {
     final String directionNextStation =
         responseType.data['directionNextStation'];
-    instructions = responseType.data['instructions'];
+    instructions = (responseType.data['instructions'] as List)
+        .map((e) => e.toString())
+        .toList();
     return Response(
       success: true,
-      type: ResponseType.toDestination,
+      type: 'TO_DESTINATION',
       data: {directionNextStation: instructions},
     );
   } else if (responseType.type.toString() == "REPEAT_LAST_RESPONSE") {
     return Response(
       success: true,
-      type: ResponseType.repeatLastResponse,
+      type: 'REPEAT_LAST_RESPONSE',
       data: null,
     );
   } else if (responseType.type.toString() == "CONFIRM_DIRECTION") {
-    final ConfirmDirectionResult confirmDirectionResult =
-        responseType.data['confirmDirectionResult'];
-    instructions = responseType.data['instructions'];
+    final String confirmDirectionResult = responseType.data['result'];
+    final result = responseType.data['instruction'];
+    instructions.add(result);
+    // instructions = (responseType.data['instruction'] as List)
+    //     .map((e) => e.toString())
+    //     .toList();
 
     return Response(
       success: true,
-      type: ResponseType.confirmDirection,
+      type: 'CONFIRM_DIRECTION',
       data: {confirmDirectionResult.toString(): instructions},
     );
-    // }
   }
 
-  // Default return if no conditions are met
-  return Response(
-    success: false,
-    type: ResponseType.unknown,
-    data: null,
-  );
+  // Add a default return statement to handle any unexpected cases
+  throw Exception('Unexpected response type');
 }
 
-enum ResponseType {
-  toDestination,
-  repeatLastResponse,
-  confirmDirection,
-  unknown,
+Future<bool> checkWrongWay(String spokenText) async {
+  double latitude = 0;
+  double longitude = 0;
+  await getLocation().then((value) {
+    latitude = value!['latitude']!;
+    longitude = value['longitude']!;
+  });
+
+  if (latitude == 0 || longitude == 0) {
+    throw Exception('Failed to load data');
+  }
+
+  const url = '$baseUrl$endpoint';
+  List<String> instructions = [];
+
+  print('latitude: $latitude');
+
+  final body = jsonEncode({
+    'spokenText': spokenText,
+    'coordinates': {
+      "latitude": latitude,
+      "longitude": longitude,
+    },
+  });
+
+  final response = await http.post(
+    Uri.parse(url),
+    body: body,
+    headers: headers,
+  );
+
+  final responseData = jsonDecode(response.body);
+  final responseType = responseData['questionType'];
+  final result = responseData['result'];
+  instructions = responseData['instructions'];
+  final isWorongWay = result == 'RIGHT_DIRECTION' ? true : false;
+
+  return isWorongWay;
 }
+
+// enum ResponseType {
+//   toDestination,
+//   repeatLastResponse,
+//   confirmDirection,
+//   unknown,
+// }
 
 class Response {
   final bool success;
-  final ResponseType type;
+  final String type;
   final dynamic data;
 
   Response({
