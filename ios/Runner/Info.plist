@@ -49,5 +49,7 @@
 	<string>This app uses speech recognition to convert your speech into text for improved user interaction.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>This app needs access to the microphone to enable speech recognition functionality.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>This app needs access to location when open.</string>
 </dict>
 </plist>

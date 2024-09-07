@@ -36,6 +36,9 @@ dependencies:
   cupertino_icons: ^1.0.8
   speech_to_text: ^6.6.2
   http: ^1.2.1
+  flutter_tts: ^4.0.2
+  flutter_spinkit: ^5.2.1
+  fl_location: ^3.1.0
 
 dev_dependencies:
   flutter_test:
@@ -66,6 +69,7 @@ flutter:
     - assets/images/logo-main.png
     - assets/images/alert-triangle.png
     - assets/images/check.png
+    - assets/images/listening.png
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see

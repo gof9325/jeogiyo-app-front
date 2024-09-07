@@ -1,7 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:two/sr_button_component.dart';
-
+import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:speech_to_text/speech_recognition_result.dart';
+import 'package:speech_to_text/speech_to_text.dart';
+import 'package:two/alert_widget.dart';
+import 'package:two/api.dart';
+import 'navigation_widget.dart';
 import 'speaker_button.dart';
+
+enum ListeningState {
+  notListening,
+  listening,
+  done,
+}
 
 class HomePageWidget extends StatefulWidget {
   const HomePageWidget({super.key});
@@ -10,32 +20,202 @@ class HomePageWidget extends StatefulWidget {
   State<HomePageWidget> createState() => _HomePageWidgetState();
 }
 
-class _HomePageWidgetState extends State<HomePageWidget> {
+class _HomePageWidgetState extends State<HomePageWidget>
+    with TickerProviderStateMixin {
+  final spinkit = const SpinKitThreeBounce(
+    color: Colors.black,
+    size: 20.0,
+  );
+  final SpeechToText _speechToText = SpeechToText();
+  bool _speechEnabled = false;
+  String _lastWords = '';
+  double latitude = 0;
+  double longitude = 0;
+  bool _showWarning = false;
+
+  ListeningState listeningState = ListeningState.notListening;
+
+  List<String> resultList = [];
+
+  void _initSpeech() async {
+    _speechEnabled = await _speechToText.initialize(
+      onStatus: (status) async {
+        if (status == 'done' && listeningState == ListeningState.listening) {
+          print("Done");
+          listeningState = ListeningState.done;
+          if (resultList.isNotEmpty) {
+            final Map<String?, List<String>?> response =
+                await ask(resultList.last, latitude, longitude);
+
+            response.forEach((key, value) {
+              if (key == '' || key == null) {
+                // _showWarning = true;
+              } else {
+                if (value != null) {
+                  resultList.addAll(value);
+                }
+              }
+            });
+          } else {
+            listeningState = ListeningState.notListening;
+          }
+
+          setState(() {});
+        }
+      },
+    );
+
+    setState(() {});
+  }
+
+  void startListening() async {
+    listeningState = ListeningState.listening;
+    print('start listening');
+    await _speechToText.listen(
+      listenFor: const Duration(seconds: 10),
+      pauseFor: const Duration(milliseconds: 2500),
+      onResult: _onSpeechResult,
+      localeId: 'ko-KR',
+    );
+
+    setState(() {});
+  }
+
+  void stopListening() async {
+    print('stop listening');
+    await _speechToText.stop();
+    listeningState = ListeningState.notListening;
+    _lastWords = '';
+    setState(() {});
+  }
+
+  void _onSpeechResult(SpeechRecognitionResult result) {
+    setState(() {
+      _lastWords = result.recognizedWords;
+      listeningState = ListeningState.done;
+    });
+    print('on speech result' + _lastWords);
+  }
+
+  void _showWrongWayNoti() {
+    setState(() {
+      _showWarning = true;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _initSpeech();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _speechToText.stop();
+  }
+
   @override
   Widget build(BuildContext context) {
+    var wrongWayNoti = Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        NotificationWidget(
+          text: 'You are going the wrong way!',
+          assetImage: const AssetImage(
+            'assets/images/alert-triangle.png',
+          ),
+          backgroundColor: Theme.of(context).colorScheme.tertiary,
+        ),
+        Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.tertiary.withAlpha(50),
+          ),
+        ),
+      ],
+    );
     return Scaffold(
       body: Stack(
+        alignment: Alignment.center,
         children: [
-          Column(
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text('Ask for directions'),
-              SpeakerButton(
-                onPressed: () {
-                  // todo listener
-                },
-                width: 150,
-                height: 150,
-                iconSize: 108.0,
-              ),
-              Text('Listening...'),
-              Text('Results: '),
-              SRTextButton(text: 'Guii Station', onPressed: () {}),
-              SRTextButton(text: 'Guri Station', onPressed: () {}),
-              SRTextButton(text: 'Gumi Station', onPressed: () {}),
-              Text('None of these?'),
-              Text('Ask again!'),
+              if (listeningState == ListeningState.notListening)
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Padding(
+                      padding: EdgeInsets.all(8.0),
+                      child: Text(
+                        'Ask for directions',
+                        style: TextStyle(
+                          fontSize: 35.0,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(
+                      height: 30,
+                    ),
+                    SpeakerButton(
+                      onPressed: () {
+                        startListening();
+                      },
+                      width: 150,
+                      height: 150,
+                      iconSize: 108.0,
+                    ),
+                  ],
+                ),
+              if (listeningState == ListeningState.listening)
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.max,
+                  children: [
+                    Row(
+                      children: [
+                        const Text(
+                          'Listening',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 40,
+                          ),
+                        ),
+                        spinkit,
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    const Image(
+                      image: AssetImage('assets/images/listening.png'),
+                      width: 182,
+                      height: 160,
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        stopListening();
+                      },
+                      child: const Text('Stop'),
+                    ),
+                  ],
+                ),
+              if (listeningState == ListeningState.done)
+                NavigationWidget(
+                  onSpeakerButtonPressed: () {
+                    startListening();
+                  },
+                  resultList: resultList,
+                ),
             ],
           ),
+          if (_showWarning) wrongWayNoti,
+          if (_showWarning)
+            Container(
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.tertiary.withOpacity(0.5),
+                borderRadius: BorderRadius.circular(20),
+              ),
+            ),
         ],
       ),
     );

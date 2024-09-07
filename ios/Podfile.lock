@@ -1,12 +1,18 @@
 PODS:
+  - fl_location (0.0.1):
+    - Flutter
   - Flutter (1.0.0)
+  - flutter_tts (0.0.1):
+    - Flutter
   - speech_to_text (0.0.1):
     - Flutter
     - Try
   - Try (2.1.1)
 
 DEPENDENCIES:
+  - fl_location (from `.symlinks/plugins/fl_location/ios`)
   - Flutter (from `Flutter`)
+  - flutter_tts (from `.symlinks/plugins/flutter_tts/ios`)
   - speech_to_text (from `.symlinks/plugins/speech_to_text/ios`)
 
 SPEC REPOS:
@@ -14,13 +20,19 @@ SPEC REPOS:
     - Try
 
 EXTERNAL SOURCES:
+  fl_location:
+    :path: ".symlinks/plugins/fl_location/ios"
   Flutter:
     :path: Flutter
+  flutter_tts:
+    :path: ".symlinks/plugins/flutter_tts/ios"
   speech_to_text:
     :path: ".symlinks/plugins/speech_to_text/ios"
 
 SPEC CHECKSUMS:
+  fl_location: 68b4a6c4aad2a453493ff66f196e0748280cf43e
   Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
+  flutter_tts: 0f492aab6accf87059b72354fcb4ba934304771d
   speech_to_text: b43a7d99aef037bd758ed8e45d79bbac035d2dfe
   Try: 5ef669ae832617b3cee58cb2c6f99fb767a4ff96
 
