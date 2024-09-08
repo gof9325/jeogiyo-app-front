@@ -7,11 +7,13 @@ class NavigationWidget extends StatefulWidget {
   final List<String> resultList;
   final Function() onSpeakerButtonPressed;
   final Function() onWrongWayNoti;
+  final bool showRightWay;
   NavigationWidget({
     super.key,
     required this.resultList,
     required this.onSpeakerButtonPressed,
     required this.onWrongWayNoti,
+    required this.showRightWay,
   });
 
   @override
@@ -20,13 +22,6 @@ class NavigationWidget extends StatefulWidget {
 
 class _NavigationWidgetState extends State<NavigationWidget> {
   late FlutterTts flutterTts;
-  bool isAnswer = false;
-
-  void _showAnswer() {
-    setState(() {
-      isAnswer = true;
-    });
-  }
 
   Future<void> _speak(String text) async {
     await flutterTts.setLanguage("ko-KR");
@@ -106,7 +101,7 @@ class _NavigationWidgetState extends State<NavigationWidget> {
             ],
           ),
         ),
-        resultBox(context, isAnswer),
+        resultBox(context, widget.showRightWay),
         const SizedBox(height: 40),
         SpeakerButton(
           onPressed: widget.onSpeakerButtonPressed,
@@ -145,9 +140,9 @@ class _NavigationWidgetState extends State<NavigationWidget> {
             ? const Text(
                 'Yes!',
                 style: TextStyle(
-                  fontSize: 50.0,
-                  fontWeight: FontWeight.bold,
-                ),
+                    fontSize: 50.0,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white),
               )
             : Column(
                 mainAxisAlignment: MainAxisAlignment.center,

@@ -33,6 +33,7 @@ class _HomePageWidgetState extends State<HomePageWidget>
   double longitude = 0;
   bool _showWarning = false;
   bool _isProcessing = false;
+  bool _showRightWay = false;
 
   ListeningState listeningState = ListeningState.notListening;
 
@@ -68,11 +69,22 @@ class _HomePageWidgetState extends State<HomePageWidget>
 
       final data = response.data;
 
-      if (response.type == "TO_DESTINATION" ||
-          response.type == "CONFIRM_DIRECTION") {
+      if (response.type == "TO_DESTINATION") {
         resultList = (data.values.first as List).cast<String>();
-      } else if (response.type == "REPEAT_LAST_RESPONSE") {
-      } else if (response.type == "CONFIRM_DIRECTION") {}
+      } else if (response.type == "CONFIRM_DIRECTION") {
+        final isWrongWay = response.data.keys.first == "WRONG_DIRECTION";
+        if (isWrongWay) {
+          _showWarning = true;
+        } else {
+          _showWarning = false;
+          _showRightWay = true;
+
+          Future.delayed(const Duration(seconds: 3), () {
+            _showRightWay = false;
+            setState(() {});
+          });
+        }
+      }
 
       _lastWords = '';
       _isProcessing = false;
@@ -113,6 +125,7 @@ class _HomePageWidgetState extends State<HomePageWidget>
 
   Future _checkWrongWay() async {
     _showWarning = await checkWrongWay(_lastWords);
+
     setState(() {});
   }
 
@@ -219,15 +232,24 @@ class _HomePageWidgetState extends State<HomePageWidget>
                   },
                   resultList: resultList,
                   onWrongWayNoti: _checkWrongWay,
+                  showRightWay: _showRightWay,
                 ),
             ],
           ),
           if (_showWarning) wrongWayNoti,
           if (_showWarning)
-            Container(
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.tertiary.withOpacity(0.5),
-                borderRadius: BorderRadius.circular(20),
+            GestureDetector(
+              onTap: () {
+                setState(() {
+                  _showWarning = false;
+                });
+              },
+              child: Container(
+                decoration: BoxDecoration(
+                  color:
+                      Theme.of(context).colorScheme.tertiary.withOpacity(0.5),
+                  borderRadius: BorderRadius.circular(20),
+                ),
               ),
             ),
         ],
