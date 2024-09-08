@@ -147,7 +147,7 @@ class _NavigationWidgetState extends State<NavigationWidget> {
                     Text(
                       instruction,
                       style: const TextStyle(
-                        fontSize: 20.0,
+                        fontSize: 40.0,
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                       ),
