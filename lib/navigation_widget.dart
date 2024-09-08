@@ -6,13 +6,11 @@ import 'sr_button_component.dart';
 class NavigationWidget extends StatefulWidget {
   final List<String> resultList;
   final Function() onSpeakerButtonPressed;
-  final Function() onWrongWayNoti;
   final bool showRightWay;
   NavigationWidget({
     super.key,
     required this.resultList,
     required this.onSpeakerButtonPressed,
-    required this.onWrongWayNoti,
     required this.showRightWay,
   });
 
@@ -119,10 +117,7 @@ class _NavigationWidgetState extends State<NavigationWidget> {
     );
   }
 
-  Container resultBox(
-    BuildContext context,
-    bool isAnswer,
-  ) {
+  Container resultBox(BuildContext context, bool isRightWay) {
     return Container(
       constraints: const BoxConstraints(
         minHeight: 200,
@@ -130,13 +125,13 @@ class _NavigationWidgetState extends State<NavigationWidget> {
       alignment: Alignment.centerLeft,
       width: MediaQuery.of(context).size.width,
       decoration: BoxDecoration(
-        color: isAnswer
+        color: isRightWay
             ? Theme.of(context).colorScheme.secondary
             : Theme.of(context).primaryColor,
       ),
       child: Padding(
         padding: const EdgeInsets.all(10),
-        child: isAnswer
+        child: isRightWay
             ? const Text(
                 'Yes!',
                 style: TextStyle(
@@ -148,9 +143,9 @@ class _NavigationWidgetState extends State<NavigationWidget> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  for (var i = 0; i < widget.resultList.length; i++)
+                  for (var instruction in widget.resultList)
                     Text(
-                      widget.resultList[i],
+                      instruction,
                       style: const TextStyle(
                         fontSize: 20.0,
                         color: Colors.white,

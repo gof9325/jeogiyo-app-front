@@ -72,17 +72,25 @@ class _HomePageWidgetState extends State<HomePageWidget>
       if (response.type == "TO_DESTINATION") {
         resultList = (data.values.first as List).cast<String>();
       } else if (response.type == "CONFIRM_DIRECTION") {
-        final isWrongWay = response.data.keys.first == "WRONG_DIRECTION";
-        if (isWrongWay) {
-          _showWarning = true;
-        } else {
+        final result = response.data['result'] as String;
+        final instruction = response.data['instruction'] as String;
+
+        resultList = [instruction];
+
+        if (result == "RIGHT_DIRECTION") {
           _showWarning = false;
           _showRightWay = true;
-
           Future.delayed(const Duration(seconds: 3), () {
             _showRightWay = false;
             setState(() {});
           });
+        } else if (result == "WRONG_DIRECTION") {
+          _showWarning = true;
+          _showRightWay = false;
+        } else {
+          // Handle UNKNOWN case
+          _showWarning = false;
+          _showRightWay = true;
         }
       }
 
@@ -231,7 +239,6 @@ class _HomePageWidgetState extends State<HomePageWidget>
                     startListening();
                   },
                   resultList: resultList,
-                  onWrongWayNoti: _checkWrongWay,
                   showRightWay: _showRightWay,
                 ),
             ],

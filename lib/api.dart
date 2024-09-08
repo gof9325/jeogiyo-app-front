@@ -6,28 +6,27 @@ import 'location.dart';
 
 const baseUrl = 'https://jeogiyo-backend.groon.workers.dev';
 const endpoint = '/api/ask';
-Map<double, double> coordinates = {
-  37.554759: 127.010649,
-  37.546797: 127.016310,
-  37.558940: 127.004879,
-};
+List<Map<String, double>> coordinates = [
+  {'latitude': 37.554759, 'longitude': 127.010649},
+  {'latitude': 37.546797, 'longitude': 127.016310},
+  {'latitude': 37.558940, 'longitude': 127.004879},
+];
 
 const headers = {
   "Content-Type": "application/x-www-form-urlencoded",
 };
 
+int _coordinateIndex = 0;
+Map<String, double> _getNextCoordinate() {
+  final coordinate = coordinates[_coordinateIndex];
+  _coordinateIndex = (_coordinateIndex + 1) % coordinates.length;
+  return coordinate;
+}
+
 Future<Response> ask(String spokenText) async {
-  double latitude = 0;
-  double longitude = 0;
-  // await getLocation().then((value) {
-  //   latitude = value!['latitude']!;
-  //   longitude = value['longitude']!;
-  // });
-
-  int rendom = Random().nextInt(3);
-
-  latitude = coordinates.keys.elementAt(rendom);
-  longitude = coordinates.values.elementAt(rendom);
+  final coordinate = _getNextCoordinate();
+  double latitude = coordinate['latitude']!;
+  double longitude = coordinate['longitude']!;
 
   if (latitude == 0 || longitude == 0) {
     throw Exception('Failed to load data');
@@ -57,8 +56,6 @@ Future<Response> ask(String spokenText) async {
     data: responseData['data'],
   );
 
-  // count = count + 1;
-
   if (responseType.type.toString() == "UNKNOWN") {
     return Response(
       success: true,
@@ -83,38 +80,26 @@ Future<Response> ask(String spokenText) async {
       data: null,
     );
   } else if (responseType.type.toString() == "CONFIRM_DIRECTION") {
-    final String confirmDirectionResult = responseType.data['result'];
-    final result = responseType.data['instruction'];
-    instructions.add(result);
-
+    final String result = responseData['data']['result'];
+    final String instruction = responseData['data']['instruction'];
     return Response(
       success: true,
       type: 'CONFIRM_DIRECTION',
-      data: {confirmDirectionResult.toString(): instructions},
+      data: {
+        'result': result,
+        'instruction': instruction,
+      },
     );
   }
 
   throw Exception('Unexpected response type');
 }
 
-// int count2 = 0;
-
 Future<bool> checkWrongWay(String spokenText) async {
-  // double latitude = 0;
-  // double longitude = 0;
-  // await getLocation().then((value) {
-  //   latitude = value!['latitude']!;
-  //   longitude = value['longitude']!;
-  // });
-
   int rendom = Random().nextInt(3);
 
-  // if (count2 == 2) {
-  //   count2 = 0;
-  // }
-
-  double latitude = coordinates.keys.elementAt(rendom);
-  double longitude = coordinates.values.elementAt(rendom);
+  double latitude = coordinates[rendom]['latitude']!;
+  double longitude = coordinates[rendom]['longitude']!;
 
   print('latitude: $latitude');
   print('longitude: $longitude');
@@ -124,9 +109,6 @@ Future<bool> checkWrongWay(String spokenText) async {
   }
 
   const url = '$baseUrl$endpoint';
-  List<String> instructions = [];
-
-  // print('latitude: $latitude');
 
   final body = jsonEncode({
     'spokenText': spokenText,
@@ -145,10 +127,7 @@ Future<bool> checkWrongWay(String spokenText) async {
   final responseData = jsonDecode(response.body);
   final responseType = responseData['questionType'];
   final result = responseData['result'];
-  instructions = responseData['instructions'];
   final isWorongWay = result == 'RIGHT_DIRECTION' ? true : false;
-
-  // count2 = count2 + 1;
 
   return isWorongWay;
 }
@@ -166,7 +145,7 @@ class Response {
 }
 
 enum ConfirmDirectionResult {
-  unknown,
-  rightDirection,
-  wrongDirection,
+  UNKNOWN,
+  RIGHT_DIRECTION,
+  WRONG_DIRECTION,
 }
