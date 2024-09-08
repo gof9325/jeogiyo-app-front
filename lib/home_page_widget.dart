@@ -71,7 +71,8 @@ class _HomePageWidgetState extends State<HomePageWidget>
       if (response.type == "TO_DESTINATION" ||
           response.type == "CONFIRM_DIRECTION") {
         resultList = (data.values.first as List).cast<String>();
-      } else if (response.type == "REPEAT_LAST_RESPONSE") {}
+      } else if (response.type == "REPEAT_LAST_RESPONSE") {
+      } else if (response.type == "CONFIRM_DIRECTION") {}
 
       _lastWords = '';
       _isProcessing = false;

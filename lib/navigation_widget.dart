@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
-
-import 'api.dart';
 import 'speaker_button.dart';
 import 'sr_button_component.dart';
 

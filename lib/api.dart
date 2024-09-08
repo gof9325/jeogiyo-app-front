@@ -8,7 +8,6 @@ const endpoint = '/api/ask';
 
 const headers = {
   "Content-Type": "application/x-www-form-urlencoded",
-  // "Content-Type": "application/json",
 };
 
 Future<Response> ask(String spokenText) async {
@@ -84,9 +83,6 @@ Future<Response> ask(String spokenText) async {
     final String confirmDirectionResult = responseType.data['result'];
     final result = responseType.data['instruction'];
     instructions.add(result);
-    // instructions = (responseType.data['instruction'] as List)
-    //     .map((e) => e.toString())
-    //     .toList();
 
     return Response(
       success: true,
@@ -95,17 +91,33 @@ Future<Response> ask(String spokenText) async {
     );
   }
 
-  // Add a default return statement to handle any unexpected cases
   throw Exception('Unexpected response type');
 }
 
+int count = 0;
+
 Future<bool> checkWrongWay(String spokenText) async {
-  double latitude = 0;
-  double longitude = 0;
-  await getLocation().then((value) {
-    latitude = value!['latitude']!;
-    longitude = value['longitude']!;
-  });
+  // double latitude = 0;
+  // double longitude = 0;
+  // await getLocation().then((value) {
+  //   latitude = value!['latitude']!;
+  //   longitude = value['longitude']!;
+  // });
+  Map<double, double> coordinates = {
+    37.554759: 127.010649,
+    37.546797: 127.016310,
+    37.558940: 127.004879,
+  };
+
+  if (count == 3) {
+    count = 0;
+  }
+
+  double latitude = coordinates.keys.elementAt(count);
+  double longitude = coordinates.values.elementAt(count);
+
+  print('latitude: $latitude');
+  print('longitude: $longitude');
 
   if (latitude == 0 || longitude == 0) {
     throw Exception('Failed to load data');
@@ -114,7 +126,7 @@ Future<bool> checkWrongWay(String spokenText) async {
   const url = '$baseUrl$endpoint';
   List<String> instructions = [];
 
-  print('latitude: $latitude');
+  // print('latitude: $latitude');
 
   final body = jsonEncode({
     'spokenText': spokenText,
@@ -135,16 +147,10 @@ Future<bool> checkWrongWay(String spokenText) async {
   final result = responseData['result'];
   instructions = responseData['instructions'];
   final isWorongWay = result == 'RIGHT_DIRECTION' ? true : false;
+  count++;
 
   return isWorongWay;
 }
-
-// enum ResponseType {
-//   toDestination,
-//   repeatLastResponse,
-//   confirmDirection,
-//   unknown,
-// }
 
 class Response {
   final bool success;
